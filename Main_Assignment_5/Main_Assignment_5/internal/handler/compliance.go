@@ -21,9 +21,23 @@ func GetMyData(w http.ResponseWriter, r *http.Request) {
 func UpdateMyData(w http.ResponseWriter, r *http.Request) {
 	user, _ := lmodel.UserFromContext(r.Context())
 
-	// TODO
+	var req struct {
+		Username string `json:"username"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
 
-	//TODO
+	if req.Username == "" {
+		http.Error(w, "Username cannot be empty", http.StatusBadRequest)
+		return
+	}
+
+	if err := db.UpdateMyData(r.Context(), user.ID, req.Username); err != nil {
+		http.Error(w, "Failed to update user data", http.StatusInternalServerError)
+		return
+	}
 
 	json.NewEncoder(w).Encode(map[string]string{
 		"message":  "Data updated successfully",
@@ -34,9 +48,15 @@ func UpdateMyData(w http.ResponseWriter, r *http.Request) {
 func GetMyAuditLog(w http.ResponseWriter, r *http.Request) {
 	user, _ := lmodel.UserFromContext(r.Context())
 
-	// TODO
+	logs, err := db.GetUserAuditLogs(r.Context(), user.ID)
+	if err != nil {
+		http.Error(w, "Failed to get audit logs", http.StatusInternalServerError)
+		return
+	}
 
-	// TODO
+	if logs == nil {
+		logs = []lmodel.AuditLog{}
+	}
 
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"user":  user.Username,
