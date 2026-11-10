@@ -10,10 +10,12 @@ import (
 
 func GetMyData(w http.ResponseWriter, r *http.Request) {
 	user, _ := lmodel.UserFromContext(r.Context())
-
-	//TODO
-
-	//TODO
+	
+	profile, err := db.GetUserByID(r.Context(), user.ID)
+	if err != nil {
+		http.Error(w, "Failed to get user profile", http.StatusInternalServerError)
+		return
+	}
 
 	json.NewEncoder(w).Encode(profile)
 }
