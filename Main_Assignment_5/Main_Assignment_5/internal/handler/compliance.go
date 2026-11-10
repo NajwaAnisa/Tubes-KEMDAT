@@ -70,9 +70,29 @@ func GetMyAuditLog(w http.ResponseWriter, r *http.Request) {
 func ExportMyData(w http.ResponseWriter, r *http.Request) {
 	user, _ := lmodel.UserFromContext(r.Context())
 
-	// TODO
+	profile, err := db.GetUserByID(r.Context(), user.ID)
+	if err != nil {
+		http.Error(w, "Failed to export profile data", http.StatusInternalServerError)
+		return
+	}
 
-	// TODO
+	projects, err := db.GetUserProjects(r.Context(), user.ID)
+	if err != nil {
+		http.Error(w, "Failed to export project data", http.StatusInternalServerError)
+		return
+	}
+	if projects == nil {
+		projects = []lmodel.Project{}
+	}
+
+	logs, err := db.GetUserAuditLogs(r.Context(), user.ID)
+	if err != nil {
+		http.Error(w, "Failed to export audit logs", http.StatusInternalServerError)
+		return
+	}
+	if logs == nil {
+		logs = []lmodel.AuditLog{}
+	}
 
 	export := map[string]interface{}{
 		"exported_at": time.Now(),
@@ -87,7 +107,10 @@ func ExportMyData(w http.ResponseWriter, r *http.Request) {
 func DeleteMyAccount(w http.ResponseWriter, r *http.Request) {
 	user, _ := lmodel.UserFromContext(r.Context())
 
-	// TODO
+	if err := db.DeleteUserAccount(r.Context(), user.ID); err != nil {
+		http.Error(w, "Failed to delete account", http.StatusInternalServerError)
+		return
+	}
 
 	json.NewEncoder(w).Encode(map[string]string{
 		"message": "Your account and all data have been permanently deleted",
